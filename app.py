@@ -2,7 +2,7 @@ import os
 import uuid
 import json
 from pathlib import Path
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -30,7 +30,10 @@ def your_url():
         else:
             f = request.files['file']
             full_name = str(uuid.uuid4()) + secure_filename(f.filename)
-            full_path = Path.cwd() / 'file_uploads' / full_name
+
+            # ref: http://zetcode.com/python/pathlib/
+            full_path = Path.cwd() / 'static' / 'users_files' / full_name
+
             f.save(full_path)
             urls[request.form['code']] = {'file': full_name}
 
@@ -51,3 +54,12 @@ def redirect_to_url(code):
             if code in urls.keys():
                 if 'url' in urls[code].keys():
                     return redirect(urls[code]['url'])
+                else:
+                    return redirect(url_for('static', filename='users_files/'+urls[code]['file']))
+    
+    return abort(404)
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('page_not_found.html'), 404

@@ -9,6 +9,8 @@ __pycache__/
 venv3
 file_uploads
 urls.json
+static/users_files/
+
 
 # Distribution / packaging
 .Python
