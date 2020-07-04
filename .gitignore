@@ -8,6 +8,7 @@ __pycache__/
 
 venv3
 file_uploads
+urls.json
 
 # Distribution / packaging
 .Python
