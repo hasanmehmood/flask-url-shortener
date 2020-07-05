@@ -2,18 +2,18 @@ import os
 import uuid
 import json
 from pathlib import Path
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, session, jsonify
+from flask import render_template, request, redirect, url_for, flash, abort, session, jsonify, Blueprint
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
-app.secret_key = 'somethingveryrandom'
 
-@app.route('/')
+bp = Blueprint('urlshort', __name__)
+
+@bp.route('/')
 def home():
     return render_template('home.html', codes=session.keys())
 
 
-@app.route('/your-url', methods=['GET', 'POST'])
+@bp.route('/your-url', methods=['GET', 'POST'])
 def your_url():
     if request.method == 'POST':
         urls = {}
@@ -23,7 +23,7 @@ def your_url():
         
         if request.form['code'] in urls.keys():
             flash('That name is already being selected. Please choose another one!')
-            return redirect(url_for('home'))
+            return redirect(url_for('urlshort.home'))
 
         if 'url' in request.form.keys():
             urls[request.form['code']] = {'url': request.form['url']}
@@ -32,7 +32,7 @@ def your_url():
             full_name = str(uuid.uuid4()) + secure_filename(f.filename)
 
             # ref: http://zetcode.com/python/pathlib/
-            full_path = Path.cwd() / 'static' / 'users_files' / full_name
+            full_path = Path.cwd() / 'urlshort' / 'static' / 'users_files' / full_name
 
             f.save(full_path)
             urls[request.form['code']] = {'file': full_name}
@@ -46,10 +46,10 @@ def your_url():
 
         return render_template('your_url.html', code=request.form['code'])
     else:
-        return redirect(url_for('home'))
+        return redirect(url_for('urlshort.home'))
 
 
-@app.route('/<string:code>')
+@bp.route('/<string:code>')
 def redirect_to_url(code):
     if os.path.exists('urls.json'):
         with open('urls.json') as urls_file:
@@ -63,11 +63,11 @@ def redirect_to_url(code):
     return abort(404)
 
 
-@app.route('/api')
+@bp.route('/api')
 def session_api():
     return jsonify(list(session.keys()))
 
 
-@app.errorhandler(404)
+@bp.errorhandler(404)
 def page_not_found(error):
     return render_template('page_not_found.html'), 404
