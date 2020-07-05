@@ -5,11 +5,13 @@ __pycache__/
 
 # C extensions
 *.so
+.DS_Store
 
 venv3
 file_uploads
 urls.json
 static/users_files/
+ExFiles
 
 
 # Distribution / packaging
