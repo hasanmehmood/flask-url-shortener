@@ -12,7 +12,7 @@ file_uploads
 urls.json
 urlshort/static/users_files/
 ExFiles
-
+environment.env
 
 # Distribution / packaging
 .Python

@@ -2,11 +2,18 @@ import os
 import uuid
 import json
 from pathlib import Path
-from flask import render_template, request, redirect, url_for, flash, abort, session, jsonify, Blueprint
+from flask import current_app, render_template, request, redirect, url_for, flash, abort, session, jsonify, Blueprint
 from werkzeug.utils import secure_filename
 
 
+
 bp = Blueprint('urlshort', __name__)
+
+@bp.record
+def record_params(setup_state):
+    global db
+    db = setup_state.app.config['db']
+
 
 @bp.route('/')
 def home():
