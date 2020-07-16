@@ -24,16 +24,15 @@ def home():
 def your_url():
     if request.method == 'POST':
         urls = {}
-        if os.path.exists('urls.json'):
-            with open('urls.json') as urls_file:
-                urls = json.load(urls_file)
         
-        if request.form['code'] in urls.keys():
+        code = db.urls.find_one({'code': request.form['code']})
+        if code is not None:
             flash('That name is already being selected. Please choose another one!')
             return redirect(url_for('urlshort.home'))
 
+        urls['code'] = request.form['code']
         if 'url' in request.form.keys():
-            urls[request.form['code']] = {'url': request.form['url']}
+            urls['data'] = {'url': request.form['url']}
         else:
             f = request.files['file']
             full_name = str(uuid.uuid4()) + secure_filename(f.filename)
@@ -42,14 +41,13 @@ def your_url():
             full_path = Path.cwd() / 'urlshort' / 'static' / 'users_files' / full_name
 
             f.save(full_path)
-            urls[request.form['code']] = {'file': full_name}
+            urls['data'] = {'file': full_name}
 
-        # Saving urls dict in a json file
-        with open('urls.json', 'w') as urls_file:
-            json.dump(urls, urls_file)
+        # Saving url in mongo collection
+        db.urls.insert(urls)
 
-            # storing users data in session/cookies
-            session[request.form['code']] = True
+        # storing users data in session/cookies
+        session[request.form['code']] = True
 
         return render_template('your_url.html', code=request.form['code'])
     else:
@@ -58,15 +56,12 @@ def your_url():
 
 @bp.route('/<string:code>')
 def redirect_to_url(code):
-    if os.path.exists('urls.json'):
-        with open('urls.json') as urls_file:
-            urls = json.load(urls_file)
-            if code in urls.keys():
-                if 'url' in urls[code].keys():
-                    return redirect(urls[code]['url'])
-                else:
-                    return redirect(url_for('static', filename='users_files/'+urls[code]['file']))
-    
+    url = db.urls.find_one({'code': code})
+    if url is not None:
+        if 'url' in url['data'].keys():
+            return redirect(url['data']['url'])
+        else:
+            return redirect(url_for('static', filename='users_files/'+url['data']['file']))
     return abort(404)
 
 
